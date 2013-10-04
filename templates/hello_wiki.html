@@ -13,10 +13,10 @@
 		<p> <input type='submit' value='Okay'> </p>
 	</form>
 
-<ul> 
-	{% for item in pages %}
-		<li> {{pages[item][0]}}: {{pages[item][1]}} </li>
-	{% endfor %} 
+<ul>
+	{% for item in order %}
+		<li> <a href="{{ url_for('loadpage', title = item) }}">{{item}}</a>: {{pages[item][0]}} </li>
+	{% endfor %}
 </ul>
-	
+
 </div>
