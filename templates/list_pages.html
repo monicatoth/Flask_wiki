@@ -1,0 +1,9 @@
+{% extends 'background.html' %}
+
+{% block body %}
+
+{% for p in pages %}
+<p><a href="{{ url_for('show_page', id=p.id) }}">{{p.title}}</a> </p>
+{% endfor %}
+
+{% endblock %}

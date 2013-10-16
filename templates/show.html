@@ -1,0 +1,14 @@
+{% extends 'background.html' %}
+
+{% block body %}
+
+<h1> {{page.title}}</h1>
+
+<br><p> {{page.content}} </p><br>
+
+<form id='make_edits' method='post'>
+<input type='submit' value='Edit'></form>
+
+<br><p class=created> {{page.created}} </p>
+
+{% endblock %}
