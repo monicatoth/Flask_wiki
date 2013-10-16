@@ -1,4 +1,4 @@
-from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
+from flask import Flask, request, g, redirect, url_for, render_template
 from sqlite3 import dbapi2 as sqlite3
 import time, datetime
 from wikiclass import *
@@ -53,7 +53,7 @@ def close_db(error):
 def show_entries():
 	if request.method == 'GET':
 	    db = get_db()
-	    cursor = db.execute('SELECT id, created, title, content FROM pages ORDER BY created DESC LIMIT 5')
+	    cursor = db.execute("SELECT id, datetime(created, 'unixepoch') as created, title, content FROM pages ORDER BY created ASC")
 	    entries = cursor.fetchall()
 	    return render_template('show_entries.html', entries=entries)
 	else:
@@ -63,30 +63,47 @@ def show_entries():
 		#flash('New entry was successfully posted')
 		return redirect(url_for('show_entries'))
 
+@wiki_app.route('/all')
+def list_pages():
+	db = get_db()
+	cursor = db.execute("SELECT id, datetime(created, 'unixepoch') as created, title, content FROM pages")
+	pages = cursor.fetchall()
+	return render_template('list_pages.html', pages=pages)
+
+@wiki_app.route('/<id>', methods = ['GET', 'POST'])
+def show_page(id):
+	if request.method == 'GET':
+	    db = get_db()
+	    sub = Template("SELECT id, datetime(created, 'unixepoch') as created, title, content FROM pages WHERE id = $num")
+	    relevant_page = sub.substitute(num=id)
+	    cursor = db.execute(relevant_page)
+	    page = cursor.fetchone()
+	    return render_template('show.html', page=page)
+	else:
+		db = get_db()
+		sub = Template("SELECT id, datetime(created, 'unixepoch') as created, title, content FROM pages WHERE id = $num")
+		relevant_page = sub.substitute(num=id)
+		cursor = db.execute(relevant_page)
+		page = cursor.fetchone()
+		return render_template('edit.html', page=page)
+
 @wiki_app.route('/edit/<id>', methods=['GET','POST'])
 def edit_page(id):
 	if request.method == 'GET':
 	    db = get_db()
-	    sub = Template('SELECT id, created, title, content FROM pages WHERE id = $num')
+	    sub = Template("SELECT id, datetime(created, 'unixepoch') as created, title, content FROM pages WHERE id = $num")
 	    relevant_page = sub.substitute(num=id)
 	    cursor = db.execute(relevant_page)
 	    page = cursor.fetchone()
-	    #return str(page)
 	    return render_template('edit.html', page=page)
-    #db.execute('update pages set title, content) values (?, ?)',
-    #             [request.form['title'], request.form['content']])
-    #db.commit()
+	#db.commit()
     #flash('New entry was successfully posted')
 
 @wiki_app.route('/success', methods=['POST'])
 def success():
 	if request.method == 'POST':
 		db = get_db()
-		sub = Template("UPDATE pages SET content = '$content' WHERE id = $page_id")
-		page_id = request.form['id']
-		page_content = request.form['content']
-		sql = sub.substitute(content=page_content, page_id=page_id)
-		db.execute(sql)
+		db.execute('UPDATE pages SET content = (?) WHERE id = (?)', [request.form['content'], request.form['id']])
 		db.commit()
 		return render_template('success.html')
 		return str(sql)
